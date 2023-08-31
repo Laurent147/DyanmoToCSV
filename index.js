@@ -1,27 +1,17 @@
-const readline = require('./readfile');
-const writeFile = require('./writefile');
-const ProgressBar = require('progress');
+const readline = require("./src/readfile");
+const writeFile = require("./src/writefile");
+const ProgressBar = require("progress");
+const config = require("./config");
+const path = require("path");
 
-const extractFolder = './ETL_export/';
-const logFile = `${extractFolder}extract_log.txt`;
-
-const files = [
-  // 'test.json'
-  '43nzou7eva357arzzw6r22et5m.json',
-  // 'hiftxavsga6gtlbkzuoazql45m.json',
-  // 'mokvs7cwxm4vvlhliefq473hue.json',
-  // 'uftp4wielm5m7cma75hw6c53yi.json'
-]
-
-const patterns = [
-  ["createdAt", /"createdAt":{"N":"([^"]*)"}/],
-  ["updatedAt", /"updatedAt":{"N":"([^"]*)"}/],
-  ["status", /"status":{"S":"([^"]*)"}/],
-  ["submission", /"submission":{"M":(.*)},"status"/],
-  ["country", /"country":{"S":"([^"]*)"}/],
-  ["campaignId", /"campaignId":{"S":"([^"]*)"}/],
-  ["promotionId", /"promotionId":{"S":"([^"]*)"}/]
-]
+const {
+  files,
+  sourceFolder,
+  extractFolder,
+  logFileName,
+  patterns,
+  conditionalToExclude
+} = config;
 
 const extractData = (line) => {
   const record = [];
@@ -35,42 +25,52 @@ const extractData = (line) => {
   return record;
 }
 
-const logSummary = (start) => {
+const logSummary = (start, counter1, counter2) => {
   const periodMs = new Date() - start;
   
   const time = `${parseInt((periodMs / 1000) /  3600)}:${parseInt((periodMs / 1000) /  60)}:${parseInt((periodMs % 60000)/1000)}-${periodMs - parseInt(periodMs / 1000) * 1000}`
   const used = process.memoryUsage().heapUsed / 1024 / 1024;
   
-  console.log('---------- Process completed ----------');
-  console.log(`Usesd approximately ${Math.round(used * 100) / 100} MB of memory`);
-  console.log(`Took: ${time}`);
-  console.log('---------------------------------------');
+  console.log("---------- Process completed ----------");
+  console.log(`Usesd ~ ${Math.round(used * 100) / 100} MB of memory`);
+  console.log(`Took ${time}`);
+  console.log(`extracted ${counter2} / ${counter1} after excluding condition`);
+  console.log("---------------------------------------");
 }
 
 processFiles = async () => {
+  const logFile = path.join(__dirname, extractFolder,logFileName);
+
   for (let filename of files) {
     const start = new Date();
-    
+    const dataFile = path.join(__dirname, sourceFolder, filename);
+    const extractFile = path.join(__dirname, extractFolder,`${filename}.csv`);
+
+    console.log(`\nProcess started for ${filename}, counting number of items...`);
     let counter = 0;
-    await readline(`./data/${filename}`, (line) => {
+    await readline(dataFile, (line) => {
       counter += 1;
-    });
-
-    const bar = new ProgressBar(':bar', { total: counter });
-
+    });   
+    console.log(`...There's ${counter} items in file ${filename}`);
+    
+    console.log("Starting extraction...");
+    const bar = new ProgressBar(":bar", { total: counter });
     const wf = new writeFile({
-      extractFile: `${extractFolder}${filename}.csv`,
+      extractFile,
       logFile,
       headers: patterns.map(el => el[0])
     });
-
-    await readline(`./data/${filename}`, async (line) => {
+    
+    let counter2 =0;
+    await readline(dataFile, async (line) => {
       const data = extractData(line);
-      if (data[2] === 'NEW') await wf.writeData(data);
+      if (conditionalToExclude(data)) return; 
+      await wf.writeData(data);
       bar.tick();
+      counter2 += 1;
     });
 
-    logSummary(start);
+    logSummary(start, counter, counter2);
   }
 }
 
