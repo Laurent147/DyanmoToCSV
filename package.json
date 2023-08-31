@@ -1,0 +1,16 @@
+{
+  "name": "dynamoToCSV",
+  "version": "1.0.0",
+  "description": "DynamoDB json export to CSV converter",
+  "main": "app.js",
+  "dependencies": {
+    "progress": "^2.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "laurent147",
+  "license": "ISC"
+}
