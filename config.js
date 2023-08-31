@@ -1,9 +1,9 @@
 const config = {
   files:[
     "43nzou7eva357arzzw6r22et5m.json",
-    "hiftxavsga6gtlbkzuoazql45m.json",
-    "mokvs7cwxm4vvlhliefq473hue.json",
-    "uftp4wielm5m7cma75hw6c53yi.json"
+    // "hiftxavsga6gtlbkzuoazql45m.json",
+    // "mokvs7cwxm4vvlhliefq473hue.json",
+    // "uftp4wielm5m7cma75hw6c53yi.json"
   ],
   sourceFolder: "./data",
   extractFolder: "./ETL_export",

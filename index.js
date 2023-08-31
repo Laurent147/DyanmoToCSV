@@ -25,17 +25,19 @@ const extractData = (line) => {
   return record;
 }
 
+const format1000s = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 const logSummary = (start, counter1, counter2) => {
   const periodMs = new Date() - start;
   
   const time = `${parseInt((periodMs / 1000) /  3600)}:${parseInt((periodMs / 1000) /  60)}:${parseInt((periodMs % 60000)/1000)}-${periodMs - parseInt(periodMs / 1000) * 1000}`
   const used = process.memoryUsage().heapUsed / 1024 / 1024;
   
-  console.log("---------- Process completed ----------");
-  console.log(`Usesd ~ ${Math.round(used * 100) / 100} MB of memory`);
+
+  console.log(`Used ~ ${Math.round(used * 100) / 100} MB of memory`);
   console.log(`Took ${time}`);
-  console.log(`extracted ${counter2} / ${counter1} after excluding condition`);
-  console.log("---------------------------------------");
+  console.log(`Extracted ${format1000s(counter2)} / ${format1000s(counter1)} after excluding condition`);
+  console.log("-----------------------------------------------------");
 }
 
 processFiles = async () => {
@@ -46,15 +48,20 @@ processFiles = async () => {
     const dataFile = path.join(__dirname, sourceFolder, filename);
     const extractFile = path.join(__dirname, extractFolder,`${filename}.csv`);
 
-    console.log(`\nProcess started for ${filename}, counting number of items...`);
+    console.log(`\nProcess started for ${filename}\nCounting number of records:`);
     let counter = 0;
     await readline(dataFile, (line) => {
       counter += 1;
     });   
-    console.log(`...There's ${counter} items in file ${filename}`);
+    console.log(`--> ${format1000s(counter)} records in file`);
     
-    console.log("Starting extraction...");
-    const bar = new ProgressBar(":bar", { total: counter });
+    const bar = new ProgressBar('Processing [:bar] :percent :etas', {
+    complete: '=',
+    incomplete: ' ',
+    width: 20,
+    total: counter,
+  });
+
     const wf = new writeFile({
       extractFile,
       logFile,
@@ -64,9 +71,9 @@ processFiles = async () => {
     let counter2 =0;
     await readline(dataFile, async (line) => {
       const data = extractData(line);
+      bar.tick();
       if (conditionalToExclude(data)) return; 
       await wf.writeData(data);
-      bar.tick();
       counter2 += 1;
     });
 
