@@ -72,7 +72,7 @@ processFiles = async () => {
     await readline(dataFile, async (line) => {
       const data = extractData(line);
       bar.tick();
-      if (conditionalToExclude(data)) return; 
+      if (conditionalToExclude && conditionalToExclude(data)) return; 
       await wf.writeData(data);
       counter2 += 1;
     });

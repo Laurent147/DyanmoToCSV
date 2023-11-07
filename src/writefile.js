@@ -25,13 +25,13 @@ class Writefile {
       let val = '';
 
       val = data[0];
-      if (val.indexOf('"') > -1) { val = val.replace(/"/g,'') };
+      if (val?.indexOf('"') > -1) { val = val.replace(/"/g,'') };
       record = `\n"${val}"`;
 
       for(let i = 1; i < data.length; i = i + 1) {  
         val = data[i];
 
-        if (val.indexOf('"') > -1) { val = val.replace(/"/g,'') };
+        if (val?.indexOf('"') > -1) { val = val.replace(/"/g,'') };
         record += `,"${val}"`
       }
       
